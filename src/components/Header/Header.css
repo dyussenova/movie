@@ -1,0 +1,12 @@
+.header-container {
+  position: absolute;
+  top: 13px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 146px;
+  height: 53.77px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 19.23px;
+}

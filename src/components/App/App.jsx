@@ -10,10 +10,9 @@ export default class App extends Component {
   render() {
     return (
       <div>
-        <div className="movie">jjjj</div>
         <div className="apppp">
-          <Search />
           <Header />
+          <Search />
           <Card />
         </div>
       </div>
