@@ -1,11 +1,10 @@
 import React, { Component } from 'react'
-import { Pagination, Tabs } from 'antd'
 
 import MovieServices from '../../services/movie-services'
-import Search from '../Search'
-import Card from '../Card'
 import Noconnect from '../ Noconnect'
-import Spinner from '../Spinner/Spinner'
+import Rated from '../Rated/Rated'
+import { MovieServicesProvider } from '../movie-services-context'
+import { GenresProvider } from '../genres-contex.js/genres-context'
 import './App.css'
 
 export default class App extends Component {
@@ -31,9 +30,21 @@ export default class App extends Component {
     window.addEventListener('offline', this.networkOffLine)
 
     try {
-      await Promise.all([this.loadGenres(), this.createGuestSession()])
+      await this.loadGenres()
+      const guestSessionId = localStorage.getItem('guestSessionId')
+
+      if (guestSessionId) {
+        this.setState({ guestSessionId }, () => {
+          this.loadRatedMovies()
+        })
+      } else {
+        const newGuestSessionId = await this.createGuestSession()
+        this.setState({ guestSessionId: newGuestSessionId, ratedMovies: [] }, () => {
+          this.loadRatedMovies()
+        })
+      }
+
       this.loadMovies()
-      this.loadRatedMovies()
     } catch (error) {
       console.error('Ошибка при инициализации данных:', error)
     }
@@ -84,13 +95,18 @@ export default class App extends Component {
   loadMovies = async () => {
     this.setState({ loading: true })
     try {
-      const { searchQuery, page } = this.state
+      const { searchQuery, page, ratedMovies } = this.state
       const res = searchQuery
         ? await this.movieServices.searchMovies(searchQuery, page)
         : await this.movieServices.getAllMovies(page)
 
+      const moviesWithRatings = res.results.map((movie) => {
+        const ratedMovie = ratedMovies.find((rated) => rated.id === movie.id)
+        return this.movieServices._transformMovies(movie, this.state.genres, ratedMovie ? ratedMovie.rating : 0)
+      })
+
       this.setState({
-        movies: res.results.map((movie) => this.movieServices._transformMovies(movie, this.state.genres)),
+        movies: moviesWithRatings,
         loading: false,
         totalResults: res.total_results,
       })
@@ -108,7 +124,10 @@ export default class App extends Component {
     try {
       const res = await this.movieServices.getRatedMovies(guestSessionId, pageRated)
       this.setState({
-        ratedMovies: res.results.map((movie) => this.movieServices._transformMovies(movie, this.state.genres)),
+        ratedMovies: res.results.map((movie) => ({
+          ...this.movieServices._transformMovies(movie, this.state.genres),
+          rating: movie.rating || 0,
+        })),
         totalRated: res.total_results,
       })
     } catch (error) {
@@ -121,7 +140,9 @@ export default class App extends Component {
   }
 
   onPageRated = (pageRated) => {
-    this.setState({ pageRated })
+    this.setState({ pageRated }, () => {
+      this.loadRatedMovies()
+    })
   }
 
   cropText = (text) => {
@@ -142,9 +163,12 @@ export default class App extends Component {
     }
 
     try {
-      await this.movieServices.rateMovie(movieId, rating)
+      await this.movieServices.rateMovie(guestSessionId, movieId, rating)
+
       const updatedMovies = movies.map((movie) => (movie.id === movieId ? { ...movie, rating } : movie))
-      const updatedRatedMovies = ratedMovies.some((movie) => movie.id === movieId)
+      const isRated = ratedMovies.some((movie) => movie.id === movieId)
+
+      const updatedRatedMovies = isRated
         ? ratedMovies.map((movie) => (movie.id === movieId ? { ...movie, rating } : movie))
         : [...ratedMovies, { ...updatedMovies.find((movie) => movie.id === movieId), rating }]
 
@@ -162,60 +186,31 @@ export default class App extends Component {
     const { isOnline, movies, loading, page, totalResults, genres, ratedMovies, activeTab, pageRated, totalRated } =
       this.state
 
-    const tabItems = [
-      {
-        label: 'Search',
-        key: '1',
-        children: (
-          <>
-            <Search onSearch={this.handleSearch} />
-            <div className="movies-container">
-              {loading ? <Spinner /> : null}
-              {movies.length > 0 ? (
-                <Card movies={movies} cropText={this.cropText} genres={genres} onRate={this.handleRate} />
-              ) : (
-                !loading && <NoResultsMessage />
-              )}
-              {movies.length > 0 && !loading && (
-                <div className="pagination-conteiner">
-                  <Pagination
-                    current={page}
-                    total={totalResults}
-                    onChange={this.onPageChange}
-                    className="pagination-page"
-                  />
-                </div>
-              )}
-            </div>
-          </>
-        ),
-      },
-      {
-        label: 'Rated',
-        key: '2',
-        children: (
-          <div className="movies-container">
-            <Card movies={ratedMovies} cropText={this.cropText} onRate={this.handleRate} />
-            <div className="pagination-conteiner">
-              <Pagination
-                current={pageRated}
-                total={totalRated}
-                onChange={this.onPageRated}
-                className="pagination-page"
-              />
-            </div>
-          </div>
-        ),
-      },
-    ]
-
     return (
-      <div>
-        <Noconnect isOnline={isOnline} />
-        <div className="apppp">
-          <Tabs className="header-container" activeKey={activeTab} onChange={this.handleTabChange} items={tabItems} />
-        </div>
-      </div>
+      <MovieServicesProvider value={this.movieServices}>
+        <GenresProvider value={genres}>
+          <div className="apppp">
+            <Noconnect isOnline={isOnline} />
+            <Rated
+              activeTab={activeTab}
+              onTabChange={this.handleTabChange}
+              movies={movies}
+              loading={loading}
+              totalResults={totalResults}
+              page={page}
+              onPageChange={this.onPageChange}
+              ratedMovies={ratedMovies}
+              pageRated={pageRated}
+              totalRated={totalRated}
+              cropText={this.cropText}
+              onRate={this.handleRate}
+              NoResultsMessage={NoResultsMessage}
+              onSearch={this.handleSearch}
+              onPageRated={this.onPageRated}
+            />
+          </div>
+        </GenresProvider>
+      </MovieServicesProvider>
     )
   }
 }

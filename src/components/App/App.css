@@ -11,14 +11,13 @@
   background-color: #d9d9d9;
 }
 
-.header-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.no-results {
+  width: 1010px;
+  height: 3129px;
 }
-.movies-container {
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: 34px;
-  gap: 35px;
+
+@media screen and (max-width: 768px) {
+  .apppp {
+    min-width: 420px;
+  }
 }

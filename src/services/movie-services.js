@@ -31,10 +31,6 @@ export default class MovieServices {
   async createGuestSession() {
     const response = await fetch(`${this._apiBase}/authentication/guest_session/new?api_key=${this._apiKey}`, {
       method: 'GET',
-      headers: {
-        Authorization:
-          'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlMTIwMmZiMWU3NWM2MzgyZGEwOThmNGY0ZjE3MGM1ZiIsIm5iZiI6MTcyMTU4Njc4NS41MTEwMzEsInN1YiI6IjY2OWJhMzVmYTdmNDI5MGQ3NjA1ZDZlNiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.XqvnAPtNxE-tHUPPmrbZzQIZTlFUQwOO-DZROQEnvYg',
-      },
     })
 
     if (!response.ok) {
@@ -42,19 +38,23 @@ export default class MovieServices {
     }
 
     const data = await response.json()
+    localStorage.setItem('guestSessionId', data.guest_session_id)
     return data.guest_session_id
   }
 
-  async rateMovie(movieId, rating) {
-    const res = await fetch(`${this._apiBase}/movie/${movieId}/rating?api_key=${this._apiKey}`, {
-      method: 'POST',
-      headers: {
-        Authorization:
-          'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlMTIwMmZiMWU3NWM2MzgyZGEwOThmNGY0ZjE3MGM1ZiIsIm5iZiI6MTcyMTU4Njc4NS41MTEwMzEsInN1YiI6IjY2OWJhMzVmYTdmNDI5MGQ3NjA1ZDZlNiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.XqvnAPtNxE-tHUPPmrbZzQIZTlFUQwOO-DZROQEnvYg',
-        'Content-Type': 'application/json;charset=utf-8',
-      },
-      body: JSON.stringify({ value: rating }),
-    })
+  async rateMovie(guestSessionId, movieId, rating) {
+    const res = await fetch(
+      `${this._apiBase}/movie/${movieId}/rating?guest_session_id=${guestSessionId}&api_key=${this._apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization:
+            'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlMTIwMmZiMWU3NWM2MzgyZGEwOThmNGY0ZjE3MGM1ZiIsIm5iZiI6MTcyMTU4Njc4NS41MTEwMzEsInN1YiI6IjY2OWJhMzVmYTdmNDI5MGQ3NjA1ZDZlNiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.XqvnAPtNxE-tHUPPmrbZzQIZTlFUQwOO-DZROQEnvYg', // Убедитесь, что используете правильный Bearer токен
+          'Content-Type': 'application/json;charset=utf-8',
+        },
+        body: JSON.stringify({ value: rating }),
+      }
+    )
 
     if (!res.ok) {
       throw new Error(`Не удалось поставить рейтинг фильму, статус ${res.status}`)
@@ -84,7 +84,7 @@ export default class MovieServices {
     return data
   }
 
-  _transformMovies(movie, genres) {
+  _transformMovies(movie, genres, rating = 0) {
     return {
       id: movie.id,
       title: movie.title,
@@ -93,6 +93,7 @@ export default class MovieServices {
       posterPath: movie.poster_path,
       average: movie.vote_average,
       genreNames: movie.genre_ids.map((id) => genres[id]),
+      rating,
     }
   }
 }

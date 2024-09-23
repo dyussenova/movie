@@ -2,10 +2,7 @@ import React, { Component } from 'react'
 import { Input } from 'antd'
 import { debounce } from 'lodash'
 
-import MovieServices from '../../services/movie-services'
-
 export default class Search extends Component {
-  movieServices = new MovieServices()
   state = {
     value: '',
   }

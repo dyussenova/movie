@@ -7,7 +7,6 @@
   "extends": [
     "eslint:recommended",
     "plugin:react/recommended",
-    "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended",
     "plugin:import/errors",
     "plugin:import/warnings"
@@ -19,8 +18,7 @@
     },
     "ecmaVersion": "latest",
     "sourceType": "module",
-    "project": "./tsconfig.json", // Убедитесь, что этот файл существует
-    "createDefaultProgram": true
+    "requireConfigFile": false
   },
   "plugins": ["react", "prettier", "import", "@typescript-eslint"],
   "rules": {
@@ -32,7 +30,7 @@
     "react/react-in-jsx-scope": "off",
     "react/prop-types": 0,
     "import/no-unresolved": [2, { "caseSensitive": false }],
-    "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx", ".ts", ".tsx"] }],
+    "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
     "import/order": [
       2,
       {
@@ -40,8 +38,7 @@
         "newlines-between": "always"
       }
     ],
-    "@typescript-eslint/explicit-module-boundary-types": "off",
-    "@typescript-eslint/explicit-function-return-type": "off"
+    "@typescript-eslint/explicit-module-boundary-types": "off" // Добавьте любые другие правила TypeScript здесь
   },
   "settings": {
     "react": {

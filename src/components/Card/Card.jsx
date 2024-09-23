@@ -1,6 +1,7 @@
 import React from 'react'
 import { format } from 'date-fns'
 import { Rate } from 'antd'
+import PropTypes from 'prop-types'
 
 import poster from '../../poster/poster.png'
 
@@ -17,7 +18,7 @@ const Card = ({ movies = [], cropText, onRate }) => {
   return (
     <>
       {movies.length > 0 ? (
-        movies.map(({ id, posterPath, title, date, overview, average, genreNames, rating }) => {
+        movies.map(({ id, posterPath, title, date, overview, average = 0, genreNames = [], rating = 0 }) => {
           const formattedDate = isNaN(new Date(date).getTime())
             ? 'Unknown Date'
             : format(new Date(date), 'MMMM dd, yyyy')
@@ -32,18 +33,18 @@ const Card = ({ movies = [], cropText, onRate }) => {
                 <div className="movie-average" style={{ borderColor: getBorderColor(average) }}>
                   {average.toFixed(1)}
                 </div>
-                <h2>{title}</h2>
-                <p className="movie-date">{formattedDate}</p>
+                <h2 className="movie-info__title">{title}</h2>
+                <p className="movie-info__date">{formattedDate}</p>
                 <div className="movie-genres">
                   {genresList.map((genre, index) => (
-                    <p key={index} className="genre">
+                    <span key={index} className="genre">
                       {genre}
-                    </p>
+                    </span>
                   ))}
                 </div>
                 <p className="movie-description">{cropText(overview)}</p>
                 <div className="rate-wrapper">
-                  <Rate count={10} value={rating || 0} onChange={(value) => onRate(id, value)} />
+                  <Rate count={10} value={rating} onChange={(value) => onRate(id, value)} />
                 </div>
               </div>
             </div>
@@ -54,6 +55,22 @@ const Card = ({ movies = [], cropText, onRate }) => {
       )}
     </>
   )
+}
+
+Card.propTypes = {
+  movies: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      title: PropTypes.string,
+      date: PropTypes.string.isRequired,
+      overview: PropTypes.string.isRequired,
+      average: PropTypes.number,
+      genreNames: PropTypes.arrayOf(PropTypes.string),
+      rating: PropTypes.number,
+    })
+  ).isRequired,
+  cropText: PropTypes.func,
+  onRate: PropTypes.func,
 }
 
 export default Card

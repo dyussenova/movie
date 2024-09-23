@@ -3,3 +3,27 @@
   justify-content: center;
   align-items: center;
 }
+
+.movies-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 34px;
+  gap: 35px;
+  justify-content: center;
+}
+.pagination-conteiner {
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+}
+.pagination-page .ant-pagination-options {
+  display: none;
+}
+
+@media screen and (max-width: 768px) {
+  .movies-container {
+    margin-top: 34px;
+    justify-content: center;
+  }
+}
