@@ -5,7 +5,7 @@ import PropTypes from 'prop-types'
 import Card from '../Card'
 import Search from '../Search'
 import Spinner from '../Spinner/Spinner'
-import { GenresConsumer } from '../genres-contex.js/genres-context'
+import { GenresConsumer } from '../../genres-context'
 
 import './Rated.css'
 
@@ -34,8 +34,9 @@ const Rated = ({
         <>
           <Search onSearch={onSearch} />
           <div className="movies-container">
-            {loading ? <Spinner /> : null}
-            {movies.length > 0 ? (
+            {loading ? (
+              <Spinner />
+            ) : movies.length > 0 ? (
               <GenresConsumer>
                 {(genres) => <Card movies={movies} cropText={cropText} genres={genres} onRate={onRate} />}
               </GenresConsumer>
@@ -44,7 +45,14 @@ const Rated = ({
             )}
             {movies.length > 0 && !loading && (
               <div className="pagination-container">
-                <Pagination current={page} total={totalResults} onChange={onPageChange} className="pagination-page" />
+                <Pagination
+                  current={page}
+                  total={totalResults}
+                  onChange={onPageChange}
+                  className="pagination-page"
+                  showSizeChanger={false}
+                  defaultPageSize={20}
+                />
               </div>
             )}
           </div>

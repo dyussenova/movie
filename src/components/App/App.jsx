@@ -3,8 +3,8 @@ import React, { Component } from 'react'
 import MovieServices from '../../services/movie-services'
 import Noconnect from '../ Noconnect'
 import Rated from '../Rated/Rated'
-import { MovieServicesProvider } from '../movie-services-context'
-import { GenresProvider } from '../genres-contex.js/genres-context'
+import { MovieServicesProvider } from '../../movie-context'
+import { GenresProvider } from '../../genres-context'
 import './App.css'
 
 export default class App extends Component {
@@ -23,6 +23,7 @@ export default class App extends Component {
     activeTab: '1',
     pageRated: 1,
     totalRated: 0,
+    errorMessage: null,
   }
 
   async componentDidMount() {
@@ -39,14 +40,12 @@ export default class App extends Component {
         })
       } else {
         const newGuestSessionId = await this.createGuestSession()
-        this.setState({ guestSessionId: newGuestSessionId, ratedMovies: [] }, () => {
-          this.loadRatedMovies()
-        })
+        this.setState({ guestSessionId: newGuestSessionId, ratedMovies: [] })
       }
 
       this.loadMovies()
     } catch (error) {
-      console.error('Ошибка при инициализации данных:', error)
+      this.setState({ errorMessage: 'Ошибка при инициализации данных:' + error.message })
     }
   }
 
@@ -62,7 +61,7 @@ export default class App extends Component {
   }
 
   networkOnLine = () => {
-    this.setState({ isOnline: true })
+    this.setState({ isOnline: true, errorMessage: null })
   }
 
   networkOffLine = () => {
@@ -79,7 +78,7 @@ export default class App extends Component {
       const genres = await this.movieServices.getGenres()
       this.setState({ genres })
     } catch (error) {
-      console.error('Ошибка при получении жанров:', error)
+      this.setState({ errorMessage: 'Ошибка при получении жанров:' + error.message })
     }
   }
 
@@ -88,7 +87,7 @@ export default class App extends Component {
       const guestSessionId = await this.movieServices.createGuestSession()
       this.setState({ guestSessionId })
     } catch (error) {
-      console.error('Ошибка при создании гостевой сессии:', error)
+      this.setState({ errorMessage: 'Ошибка при создании гостевой сессии:' + error.message })
     }
   }
 
@@ -109,9 +108,10 @@ export default class App extends Component {
         movies: moviesWithRatings,
         loading: false,
         totalResults: res.total_results,
+        errorMessage: null,
       })
     } catch (error) {
-      console.error('Ошибка при получении фильмов:', error)
+      this.setState({ errorMessage: 'Ошибка при получении фильмов:' + error.message })
       this.setState({ loading: false })
     }
   }
@@ -131,7 +131,7 @@ export default class App extends Component {
         totalRated: res.total_results,
       })
     } catch (error) {
-      console.error('Ошибка при получении оцененных фильмов:', error)
+      this.setState({ errorMessage: 'Ошибка при получении оцененных фильмов:' + error.message })
     }
   }
 
@@ -158,7 +158,7 @@ export default class App extends Component {
     const { guestSessionId, movies, ratedMovies } = this.state
 
     if (!guestSessionId) {
-      console.error('Гостевая сессия не создана')
+      this.setState({ errorMessage: 'Гостевая сессия не создана' })
       return
     }
 
@@ -174,7 +174,7 @@ export default class App extends Component {
 
       this.setState({ movies: updatedMovies, ratedMovies: updatedRatedMovies })
     } catch (error) {
-      console.error('Ошибка при постановке рейтинга:', error)
+      this.setState({ errorMessage: 'Ошибка при постановке рейтинга:' + error.message })
     }
   }
 
@@ -183,14 +183,25 @@ export default class App extends Component {
   }
 
   render() {
-    const { isOnline, movies, loading, page, totalResults, genres, ratedMovies, activeTab, pageRated, totalRated } =
-      this.state
+    const {
+      isOnline,
+      movies,
+      loading,
+      page,
+      totalResults,
+      genres,
+      ratedMovies,
+      activeTab,
+      pageRated,
+      totalRated,
+      errorMessage,
+    } = this.state
 
     return (
       <MovieServicesProvider value={this.movieServices}>
         <GenresProvider value={genres}>
           <div className="apppp">
-            <Noconnect isOnline={isOnline} />
+            <Noconnect isOnline={isOnline} errorMessage={errorMessage} />
             <Rated
               activeTab={activeTab}
               onTabChange={this.handleTabChange}

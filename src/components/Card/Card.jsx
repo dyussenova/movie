@@ -3,7 +3,7 @@ import { format } from 'date-fns'
 import { Rate } from 'antd'
 import PropTypes from 'prop-types'
 
-import poster from '../../poster/poster.png'
+import poster from '../../assets/poster.png'
 
 import './Card.css'
 
@@ -36,8 +36,8 @@ const Card = ({ movies = [], cropText, onRate }) => {
                 <h2 className="movie-info__title">{title}</h2>
                 <p className="movie-info__date">{formattedDate}</p>
                 <div className="movie-genres">
-                  {genresList.map((genre, index) => (
-                    <span key={index} className="genre">
+                  {genresList.map((genre, id) => (
+                    <span key={id} className="genre">
                       {genre}
                     </span>
                   ))}
